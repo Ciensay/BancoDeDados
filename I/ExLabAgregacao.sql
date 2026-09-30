@@ -112,3 +112,18 @@ JOIN movies_genres mg ON g.genre_id = mg.genre_id
 --JOIN movies m ON m.movie_id = mg.movie_id
 GROUP BY g.genre_id
 
+
+
+--Q2
+
+SELECT m.name, m.year
+FROM movies m
+GROUP BY m.year
+HAVING m.year = MIN(m.year)
+
+SELECT m.name, m.year
+FROM movies m
+WHERE m.year IN (
+  SELECT MIN(year)
+  FROM movies
+  )
