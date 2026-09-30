@@ -82,7 +82,7 @@ JOIN airport o ON r.Origin = o.AirportID
 JOIN airport d ON r.Destination = d.AirportID
 JOIN class c ON s.ClassID = c.ClassID
 WHERE s.CurrPrice IN(
-    SELECT MAX(CurrPrice)
+    SELECT MAX(s.CurrPrice)
     FROM stats
 );
 
@@ -104,7 +104,7 @@ WHERE s.CurrPrice IN (
 -- PARTE 2!!!
 
 
---Q1
+--Q9
 
 SELECT g.name, COUNT(*) as QUANT
 FROM  genres g
@@ -114,16 +114,74 @@ GROUP BY g.genre_id
 
 
 
---Q2
-
-SELECT m.name, m.year
-FROM movies m
-GROUP BY m.year
-HAVING m.year = MIN(m.year)
+--Q10
 
 SELECT m.name, m.year
 FROM movies m
 WHERE m.year IN (
-  SELECT MIN(year)
-  FROM movies
-  )
+    SELECT MIN(year)
+    FROM movies
+);
+
+SELECT m.name, m.year
+FROM movies m
+WHERE m.year = MIN(m.year)
+
+
+
+
+--Q11
+
+SELECT d.first_name, d.last_name
+FROM directors d
+JOIN movies_directors md ON d.director_id = md.director_id
+JOIN movies m ON md.movie_id = m.movie_id
+WHERE m.rank IN (
+    SELECT MAX(rank)
+    FROM movies
+);
+
+--Q12
+SELECT a.first_name, a.last_name, COUNT(r.role) AS QUANT
+FROM actors a
+JOIN roles r ON  r.actor_id = a.actor_id
+GROUP BY a.actor_id
+HAVING COUNT(r.role) > 2
+
+
+
+SELECT a.first_name, a.last_name, COUNT(r.role) AS Quant
+FROM actors a
+JOIN roles r ON r.actor_id = a.actor_id
+GROUP BY a.actor_id
+HAVING COUNT(r.role) > 2
+
+--Q13
+
+SELECT m.name
+FROM  movies m
+LEFT JOIN roles r ON  m.movie_id = r.movie_id
+WHERE r.movie_id IS NULL;
+
+SELECT m.name
+FROM movies m
+WHERE m.movie_id NOT IN (
+  SELECT movie_id
+  FROM roles
+)
+
+SELECT m.name
+FROM movies m
+WHERE NOT EXISTS (
+    SELECT 1 
+    FROM roles r 
+    WHERE r.movie_id = m.movie_id
+);
+
+SELECT m.name
+FROM movies m
+WHERE m.movie_id NOT IN (
+    SELECT movie_id
+    FROM roles
+    WHERE movie_id IS NOT NULL
+);
