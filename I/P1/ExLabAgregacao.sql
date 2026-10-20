@@ -13,6 +13,14 @@ WHERE AircraftTypeID IN (
     SELECT AircraftTypeID FROM aircraft
 );
 
+SELECT a.AircraftID, at.AircraftName
+FROM aircrafttype at LEFT OUTER JOIN aircraft a ON a.AircraftTypeID = at.AircraftTypeID
+
+EXCEPT
+
+SELECT a.AircraftID, at.AircraftName
+FROM aircrafttype at JOIN aircraft a ON a.AircraftTypeID = at.AircraftTypeID
+
 
 SELECT ac.aircraftid, act.AircraftName
 FROM aircrafttype act
@@ -99,6 +107,21 @@ WHERE s.CurrPrice IN (
   FROM stats
 )
 
+SELECT a1.AirportName AS FromAirport, a2.AirportName AS ToAirport, s.FlightDate, c.ClassName
+FROM ((((((route r
+JOIN airport a1 ON r.Origin = a1.AirportID)
+JOIN airport a2 ON r.Destination = a2.AirportID)
+JOIN flight f ON r.RouteID = f.RouteID)
+JOIN flightclass fc ON f.FlightID = fc.FlightID)
+JOIN class c ON c.ClassID = fc.ClassID)
+JOIN stats s ON (s.FlightID = f.FlightID AND s.ClassID = c.ClassID))
+GROUP BY a1.AirportName, a2.AirportName, s.FlightDate, c.ClassName
+HAVING MAX(s.CurrPrice) = (
+    SELECT MAX(CurrPrice)
+    FROM stats
+);
+
+
 
 
 -- PARTE 2!!!
@@ -170,18 +193,104 @@ WHERE m.movie_id NOT IN (
   FROM roles
 )
 
-SELECT m.name
+--Q14
+SELECT m.year, AVG(m.rank) AS MEDIA
 FROM movies m
-WHERE NOT EXISTS (
-    SELECT 1 
-    FROM roles r 
-    WHERE r.movie_id = m.movie_id
+GROUP BY m.year
+ORDER BY MEDIA DESC
+
+
+--Q15
+SELECT SUM(m.rank) AS SOMA
+FROM movies m
+WHERE m.year = 1994
+
+
+--Q16
+SELECT d.first_name, d.last_name, g.name, dg.prob
+FROM directors d
+JOIN directors_genres dg ON dg.director_id = d.director_id
+JOIN genres g ON g.genre_id = dg.genre_id
+WHERE dg.prob IN(
+    SELECT MAX(dga.prob)
+    FROM directors_genres dga
+    WHERE dga.director_id = d.director_id
 );
 
-SELECT m.name
-FROM movies m
-WHERE m.movie_id NOT IN (
-    SELECT movie_id
-    FROM roles
-    WHERE movie_id IS NOT NULL
-);
+SELECT d.first_name, d.last_name, g.name, dg.prob
+FROM directors d
+JOIN directors_genres dg On dg.director_id = d.director_id
+JOIN genres g ON dg.genre_id = g.genre_id
+WHERE dg.prob IN (
+  SELECT MAX(prob)
+  FROM directors_genres
+  GROUP BY director_id
+  HAVING director_id = d.director_id
+)
+
+
+--Q17
+SELECT a.gender, COUNT(a.actor_id) AS QUANT
+FROM actors a
+GROUP BY a.gender
+
+SELECT g.name, COUNT(a.actor_id) AS Quant
+FROM actors a
+JOIN roles r ON r.actor_id = a.actor_id
+JOIN movies m ON m.movie_id = r.movie_id
+JOIN movies_genres mg ON mg.movie_id = m.movie_id
+JOIN genres g ON g.genre_id = mg.genre_id
+GROUP BY g.name
+
+
+
+
+
+
+
+SELECT g.name, COUNT(a.actor_id) AS Quant
+FROM actors a
+JOIN roles r ON r.actor_id = a.actor_id
+JOIN movies m ON m.movie_id = r.movie_id
+JOIN movies_genres mg ON mg.movie_id = m.movie_id
+JOIN genres g ON g.genre_id = mg.genre_id
+GROUP BY g.name
+
+SELECT a.gender, COUNT(a.actor_id) AS Quant
+FROM actors a
+GROUP BY a.gender
+
+
+--Q18
+
+SELECT b.first_name
+FROM actors b
+GROUP BY b.first_name
+ORDER BY COUNT(b.first_name) DESC
+LIMIT 1;
+
+
+
+
+SELECT a.first_name
+FROM actors a
+GROUP BY a.first_name
+HAVING COUNT(a.actor_id) = (
+    SELECT MAX(QTD)
+    FROM (
+        SELECT COUNT(actor_id) AS QTD
+        from actors
+        GROUP BY first_name
+    )
+)
+
+
+SELECT first_name, COUNT(first_name)
+FROM actors
+GROUP BY first_name
+HAVING COUNT(first_name) = (
+                    SELECT MAX(nome_pop)
+                    FROM (SELECT COUNT(first_name) AS nome_pop
+                    FROM actors
+                    GROUP BY first_name) t1);
+
